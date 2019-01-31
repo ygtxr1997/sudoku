@@ -1,0 +1,9 @@
+v15/*
+Debug/*
+Release/*
+
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.log
