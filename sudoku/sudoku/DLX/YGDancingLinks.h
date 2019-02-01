@@ -30,6 +30,7 @@ struct YGDancingItem
 };
 
 // 舞蹈链类
+typedef class YGDancingLinks *PYGDancingLinks;
 class YGDancingLinks
 {
 public:
@@ -40,7 +41,8 @@ public:
 	PYGDancingItem getSignedItem(UINT32 uCol) const;
 	PYGDancingItem getSignedItemMinTrue(UINT32& uMinNum);
 	PYGDancingItem getHead() const;
-	void getAns(Vec& vVec) const;
+	void getAns(VVec& vvAns) const;
+	UINT32 getDanceTime() const;
 	UINT32 getRowNum() const;
 	UINT32 getColNum() const;
 public:
@@ -54,8 +56,10 @@ private:
 	inline INT32 connectItemByCol(PYGDancingItem pUpItem, PYGDancingItem pDownItem);
 private:
 	// DLX数据结构相关的变量
-	PYGDancingItem	_pHead;
-	Vec				_vAns;
+	PYGDancingItem			_pHead;
+	Vec						_vAns;
+	VVec					_vvAnswers; // 有些题目可能有多个解
+	UINT32					_uDanceTime;
 
 	// 原始数据相关的变量
 	UINT32			_uRowNum;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../DLX/YGDancingLinks.h"
 
 // 判断一个数独盘面的解是否唯一

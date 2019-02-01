@@ -3,7 +3,10 @@
 
 
 YGDancingLinks::YGDancingLinks(UINT32 uRowNum, UINT32 uColNum, Matrix& pMatrix)
-	:_pHead(new YGDancingItem(true)),
+	: _pHead(new YGDancingItem(true)),
+	_vAns(),
+	_vvAnswers(),
+	_uDanceTime(0),
 	_uRowNum(uRowNum),
 	_uColNum(uColNum),
 	_pMatrix(pMatrix)
@@ -108,10 +111,15 @@ PYGDancingItem YGDancingLinks::getHead() const
 	return _pHead;
 }
 
-void YGDancingLinks::getAns(Vec& vVec) const
+void YGDancingLinks::getAns(VVec& vvAns) const
 {
-	vVec = _vAns;
+	vvAns = _vvAnswers;
 	return;
+}
+
+UINT32 YGDancingLinks::getDanceTime() const
+{
+	return _uDanceTime;
 }
 
 UINT32 YGDancingLinks::getRowNum() const
@@ -150,14 +158,8 @@ INT32 YGDancingLinks::startDance()
 	while (pCurColItem->_pDown != pSignedItem->_pDown)
 	{
 		_vAns.push_back(pCurColItem->_uRow);
-		//debug
-		for (UINT32 i = 0; i < _vAns.size(); ++i)
-		{
-			printf("-%d", _vAns[i]);
-		}
-		printf("\n");
 
-		std::set<PYGDancingItem> wipeSet;
+		std::unordered_set<PYGDancingItem> wipeSet;
 		std::vector<PYGDancingItem> signedVec;
 
 		// 抹去元素
@@ -191,15 +193,23 @@ INT32 YGDancingLinks::startDance()
 			} while (tmpGeneralItem != vecSignedItem);
 		}
 
-		for (auto ite = wipeSet.rbegin(); ite != wipeSet.rend(); ++ite)
+		for (auto ite = wipeSet.cbegin(); ite != wipeSet.cend(); ++ite)
 		{
+			_uDanceTime++;
 			wipeItem(*ite);
 		}
 
 		// 递归
 		if (startDance())
 		{
-			return 1;
+			// 考虑到01矩阵可能有多个解，所以在这里并不return，而是继续执行
+			printf("产生一个解 : ");
+			for (UINT32 i = 0; i < _vAns.size(); ++i)
+			{
+				printf("%u-", _vAns[i]);
+			}
+			printf("\n");
+			_vvAnswers.push_back(_vAns);
 		}
 
 		// 恢复元素
@@ -232,7 +242,6 @@ INT32 YGDancingLinks::wipeItem(PYGDancingItem pItem)
 
 	connectItemByRow(pLeft, pRight);
 	connectItemByCol(pUp, pDown);
-	printf("wipe [%u,%u]\n", pItem->_uRow, pItem->_uCol);
 	return 0;
 }
 
@@ -254,7 +263,6 @@ INT32 YGDancingLinks::joinItem(PYGDancingItem pItem)
 	connectItemByRow(pItem, pRight);
 	connectItemByCol(pUp, pItem);
 	connectItemByCol(pItem, pDown);
-	printf("join [%u,%u]\n", pItem->_uRow, pItem->_uCol);
 	return 0;
 }
 
@@ -295,7 +303,7 @@ INT32 YGDancingLinks::initGeneralItems()
 		PYGDancingItem pCurRowFirstItem = nullptr;
 		for (UINT32 col = 0; col < _uColNum; ++col)
 		{
-			// 矩阵为1代表有元素
+			// 矩阵为1代表有元素，有可能某行元素全为0
 			if (!_pMatrix[row][col])
 			{
 				continue;
@@ -329,7 +337,11 @@ INT32 YGDancingLinks::initGeneralItems()
 			}
 			pCurRowLastItem = pGeneralItem;
 		}
-		connectItemByRow(pCurRowLastItem, pCurRowFirstItem);
+
+		if (pCurRowFirstItem && pCurRowLastItem)
+		{
+			connectItemByRow(pCurRowLastItem, pCurRowFirstItem);
+		}
 	}
 
 	return 0;
@@ -339,7 +351,7 @@ INT32 YGDancingLinks::connectItemByRow(PYGDancingItem pLeftItem, PYGDancingItem 
 {
 	if (pLeftItem == nullptr || pRightItem == nullptr)
 	{
-		TRACE_CMH_2("ERROR: [%d]\n", 1);
+		TRACE_CMH_2("ERROR:\n");
 		return -1;
 	}
 

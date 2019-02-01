@@ -40,50 +40,59 @@ YGSudokuJudge::~YGSudokuJudge()
 // 打印数独解
 void YGSudokuJudge::printAnswer() const
 {
-	Sudoku sdResult;
+	VVec vvAnswers;
 	Vec vAnswer;
-	_ygDlx->getAns(vAnswer);
+	_ygDlx->getAns(vvAnswers);
 
-	for (UINT32 row = 0; row < vAnswer.size() && row < _mtMatrix.size(); ++row)
+	for (UINT32 uAnsNum = 0; uAnsNum < vvAnswers.size(); ++uAnsNum)
 	{
-		// 获取每行对应的规则序号
-		UINT16 rules[4];
-		UINT8 curRule = 0;
-		for (UINT32 col = 0; col < _mtMatrix[0].size(); ++col)
+		Sudoku sdResult;
+		vAnswer = vvAnswers[uAnsNum];
+		printf("\n第%u个解:\n", uAnsNum + 1);
+		for (UINT32 row = 0; row < vAnswer.size() && row < _mtMatrix.size(); ++row)
 		{
-			if (_mtMatrix[vAnswer[row]][col] && curRule < 4)
+			// 获取每行对应的规则序号
+			UINT16 rules[4];
+			UINT8 curRule = 0;
+			for (UINT32 col = 0; col < _mtMatrix[0].size(); ++col)
 			{
-				rules[curRule++] = col;
-				col = curRule * _kRow * _kCol - 1;
+				if (_mtMatrix[vAnswer[row]][col] && curRule < 4)
+				{
+					rules[curRule++] = col;
+					col = curRule * _kRow * _kCol - 1;
+				}
+			}
+
+			// 由规则序号推算出数独盘面的行r、列c、值v
+			UINT8 uSudokuR = rules[0] / _kCol;
+			UINT8 uSudokuC = rules[0] % _kCol;
+			UINT8 uSudokuV = (rules[1] - _kRow * _kCol) - (uSudokuR * _kCol);
+
+			if (uSudokuR < _kRow && uSudokuC < _kCol && uSudokuV < _kRow)
+			{
+				sdResult._ppLayout[uSudokuR][uSudokuC] = uSudokuV;
 			}
 		}
 
-		// 由规则序号推算出数独盘面的行r、列c、值v
-		UINT8 uSudokuR = rules[0] / _kCol;
-		UINT8 uSudokuC = rules[0] % _kCol;
-		UINT8 uSudokuV = (rules[1] - _kRow * _kCol) - (uSudokuR * _kCol);
-
-		if (uSudokuR < _kRow && uSudokuC < _kCol && uSudokuV < _kRow)
+		// 打印一个解
+		for (UINT8 i = 0; i < sdResult._uRow; ++i)
 		{
-			sdResult._ppLayout[uSudokuR][uSudokuC] = uSudokuV;
+			if (!(i % 3))
+			{
+				for (UINT8 k = 0; k < sdResult._uCol; ++k)
+					printf("---");
+				printf("\n");
+			}
+			for (UINT8 j = 0; j < sdResult._uCol; ++j)
+			{
+				if (!(j % 3)) printf("| ");
+				printf("%u ", sdResult._ppLayout[i][j] + 1);
+			}
+			printf("|\n");
 		}
-	}
-
-	// print
-	for (UINT8 i = 0; i < sdResult._uRow; ++i)
-	{
+		for (UINT8 k = 0; k < sdResult._uCol; ++k)
+			printf("---");
 		printf("\n");
-		if (!(i % 3))
-		{
-			for (UINT8 k = 0; k < sdResult._uCol; ++k)
-				printf("---");
-			printf("\n");
-		}
-		for (UINT8 j = 0; j < sdResult._uCol; ++j)
-		{
-			if (!(j % 3)) printf("| ");
-			printf("%u ", sdResult._ppLayout[i][j] + 1);
-		}
 	}
 }
 
