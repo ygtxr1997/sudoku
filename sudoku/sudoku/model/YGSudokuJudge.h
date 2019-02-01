@@ -13,7 +13,6 @@ private:
 	void fillGridByPossibleWay(UINT8 uRow, UINT8 uCol, UINT8 uValue);
 private:
 	Sudoku _sdLayout;					// 初始数独盘面
-	std::set<std::vector<bool>> _set;	// 用集合缓存初始盘面
 	Matrix _mtMatrix;					// 转化后的01矩阵
 	PYGDancingLinks _ygDlx;				// DLX
 

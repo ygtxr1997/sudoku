@@ -12,9 +12,19 @@ YGSudokuJudge::YGSudokuJudge(Sudoku& sdLayout)
 	_kGridNum = _kGridRow * _kGridCol;
 	_kRuleNum = 4;
 
+	clock_t cStart, cEnd;
+	cStart = clock();
 	convertSudoku2Matrix();
+	cEnd = clock();
+	printf("转换耗时:%u\n", cEnd - cStart);
+	cStart = clock();
 	_ygDlx = new YGDancingLinks(_mtMatrix.size(), _mtMatrix[0].size(), _mtMatrix);
+	cEnd = clock();
+	printf("构造耗时:%u\n", cEnd - cStart);
+	cStart = clock();
 	_ygDlx->startDance();
+	cEnd = clock();
+	printf("舞蹈耗时:%u\n", cEnd - cStart);
 	printf("Dance time : %u", _ygDlx->getDanceTime());
 }
 
@@ -30,7 +40,51 @@ YGSudokuJudge::~YGSudokuJudge()
 // 打印数独解
 void YGSudokuJudge::printAnswer() const
 {
+	Sudoku sdResult;
+	Vec vAnswer;
+	_ygDlx->getAns(vAnswer);
 
+	for (UINT32 row = 0; row < vAnswer.size() && row < _mtMatrix.size(); ++row)
+	{
+		// 获取每行对应的规则序号
+		UINT16 rules[4];
+		UINT8 curRule = 0;
+		for (UINT32 col = 0; col < _mtMatrix[0].size(); ++col)
+		{
+			if (_mtMatrix[vAnswer[row]][col] && curRule < 4)
+			{
+				rules[curRule++] = col;
+				col = curRule * _kRow * _kCol - 1;
+			}
+		}
+
+		// 由规则序号推算出数独盘面的行r、列c、值v
+		UINT8 uSudokuR = rules[0] / _kCol;
+		UINT8 uSudokuC = rules[0] % _kCol;
+		UINT8 uSudokuV = (rules[1] - _kRow * _kCol) - (uSudokuR * _kCol);
+
+		if (uSudokuR < _kRow && uSudokuC < _kCol && uSudokuV < _kRow)
+		{
+			sdResult._ppLayout[uSudokuR][uSudokuC] = uSudokuV;
+		}
+	}
+
+	// print
+	for (UINT8 i = 0; i < sdResult._uRow; ++i)
+	{
+		printf("\n");
+		if (!(i % 3))
+		{
+			for (UINT8 k = 0; k < sdResult._uCol; ++k)
+				printf("---");
+			printf("\n");
+		}
+		for (UINT8 j = 0; j < sdResult._uCol; ++j)
+		{
+			if (!(j % 3)) printf("| ");
+			printf("%u ", sdResult._ppLayout[i][j] + 1);
+		}
+	}
 }
 
 // 数独问题转化为精确覆盖问题
@@ -59,22 +113,6 @@ void YGSudokuJudge::convertSudoku2Matrix()
 			}
 		}
 	}
-
-	// 根据缓存集合生成01矩阵
-	_mtMatrix.resize(_set.size());
-	for (UINT32 i = 0; i < _mtMatrix.size(); ++i)
-	{
-		_mtMatrix[i].resize(_kRow * _kCol * _kRuleNum);
-	}
-
-	auto ite = _set.begin();
-	for (UINT16 row = 0; row < _mtMatrix.size() && ite != _set.end(); ++row, ++ite)
-	{
-		for (UINT16 col = 0; col < _mtMatrix[0].size(); ++col)
-		{
-			_mtMatrix[row][col] = (*ite)[col];
-		}
-	}
 }
 
 void YGSudokuJudge::fillGridByPossibleWay(UINT8 uRow, UINT8 uCol, UINT8 uValue)
@@ -99,5 +137,5 @@ void YGSudokuJudge::fillGridByPossibleWay(UINT8 uRow, UINT8 uCol, UINT8 uValue)
 	vecRow[rule2] = true;
 	vecRow[rule3] = true;
 	vecRow[rule4] = true;
-	_set.insert(vecRow);
+	_mtMatrix.push_back(vecRow);
 }
