@@ -49,7 +49,7 @@ typedef struct Sudoku
 			for (UINT8 j = 0; j < _uCol; ++j)
 			{
 				if (!(j % 3)) printf("| ");
-				printf("%u ", _ppLayout[i][j] + 1);
+				printf("%u ", (UINT8(_ppLayout[i][j] + 1)));
 			}
 			printf("|\n");
 		}
